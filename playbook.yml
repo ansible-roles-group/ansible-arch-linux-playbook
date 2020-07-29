@@ -1,0 +1,33 @@
+---
+
+- name: Setup Arch Linux desktop system
+  hosts: all
+
+  #####  ---  By default run a complete system update before doing anything else  ---  #####
+  pre_tasks:
+    - name: Check if boot partition is mounted
+      stat:
+        path: /boot/initramfs-linux.img
+      register: initramfsimg
+      tags:
+        - always
+
+    - name: Fail if boot is not mounted
+      when: initramfsimg.stat.isreg is not defined
+      fail:
+        msg: 'Please mount the boot partition before doing any system updates!'
+      tags:
+        - always
+
+    - name: Upgrade the complete system
+      become: yes
+      pacman:
+        state: latest
+        update_cache: yes
+        upgrade: yes
+      tags:
+        - always
+
+  #####  ---  Roles for all hosts  ---  #####
+  roles:
+    - dotfiles                 # Get the dotfiles
